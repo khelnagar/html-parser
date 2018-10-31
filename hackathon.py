@@ -3,7 +3,7 @@
 from bs4 import BeautifulSoup
 import json
 
-file_name = '5bd6c00d652cfa3480dff05398d0e4b6'
+file_name = 'example.html'
 
 
 def get_node_text(node):
