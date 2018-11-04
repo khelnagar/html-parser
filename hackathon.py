@@ -41,32 +41,18 @@ def next_p_texts(node, include_first=False):
 def next_h_tags(node):
     """Given an <h> node, it returns a list of the adjacent <h> siblings at same node level."""
 
-    # h_tags = []
+    h_tags = []
 
-    # for sib in node.next_siblings:
-    #     if sib.name in ['h3', 'h4', 'h5', 'h6']:
-    #         h_tags.append(sib)
-    #     elif sib.name == 'h2':
-    #         break
-    #     else:
-    #         continue
+    for sib in node.next_siblings:
+        if sib.name in ['h3', 'h4', 'h5', 'h6']:
+            h_tags.append(sib)
+        elif sib.name == 'h2':
+            break
+        else:
+            continue
 
-    # return h_tags
-    print (node.name)
-    if not node:
-    	return []
-    else:
-    	return [node] + next_h_tags(node.next_sibling.next_sibling)
-    # else:
-    # 	return next_h_tags(node.next_sibling.next_sibling)
+    return h_tags
 
-
-# def recurMul(a, b):
-
-#     if b == 1:
-#         return a
-#     else:
-#         return a + recurMul(a, b-1)
 
 def get_subsections(node):
     """Given an <h2> tag, it returns a list of the insider texts of all next <p> and <ul>
