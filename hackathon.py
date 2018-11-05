@@ -3,7 +3,9 @@
 from bs4 import BeautifulSoup
 import json
 
-file_name = 'inputs/5bd6c00d652cfa3480dff05398d0e4b6'
+
+
+file_name = 'example.html'
 
 
 def get_node_text(node):
@@ -13,55 +15,52 @@ def get_node_text(node):
     return ' '.join(node.get_text().split('\n'))
 
 
-def next_p_texts(node, include_first=False):
+def next_p_texts(node):
     """Given a node, it returns a list of the insider texts of all next <p> and <ul>
     tags at same node level. The input node could be a <heading> or a <p> tag.
     """
 
-    p_tags_texts = []
-
-    # in case of getting the first/level-0 <p> tags, we include the input node itself
-    if include_first:
-        p_tags_texts = [node.get_text()]
-
-    # next_siblings is a generator object yielding one element/sibling at a time
-    for sib in node.next_siblings:
-        if sib.name == 'ul':
-            p_tags_texts.append(sib.get_text())
-        elif sib.name == 'p':
-            p_tags_texts.append(get_node_text(sib))
-        if sib.name in ['h2', 'h3', 'h4', 'h5', 'h6']:
-            break
-        else:
-            continue
-
-    return p_tags_texts
+    if not node or node.name in ['h2', 'h3', 'h4', 'h5', 'h6']:
+    	return []
+    else:
+    	return [get_node_text(node)] + next_p_texts(node.find_next_sibling(['p', 'ul', 'h2', 'h3', 'h4', 'h5', 'h6']))
 
 
 def next_h_tags(node):
     """Given an <h> node, it returns a list of the adjacent <h> siblings at same node level."""
 
-    h_tags = []
+    if not node or node.name == 'h2':
+    	return []
+    else:
+    	return [node] + next_h_tags(node.find_next_sibling(['h2', 'h3', 'h4', 'h5', 'h6']))
 
-    for sib in node.next_siblings:
-        if sib.name in ['h3', 'h4', 'h5', 'h6']:
-            h_tags.append(sib)
-        elif sib.name == 'h2':
-            break
-        else:
-            continue
 
-    return h_tags
+def has_subsection(h2_node):
+	"""Returns a tuple (True, first subsection node), if any"""
+	
+	has_sub = True
+	while h2_node and has_sub:
+		h2_node = h2_node.next_sibling.next_sibling
+		if h2_node and h2_node.name in ['h3', 'h4', 'h5', 'h6']:
+			has_sub = True
+			break
+		if h2_node and h2_node.name == 'h2':
+			has_sub = False
+	return has_sub, h2_node
 
 
 def get_subsections(node):
     """Given an <h2> tag, it returns a list of the insider texts of all next <p> and <ul>
     tags at certain hierarchy level."""
+    
     subsections = []
-    for h in next_h_tags(node):
-        subsections.append({
-            "subsection": h.get_text(),
-            "paragraphs": next_p_texts(h)
+    subsection = has_subsection(node)
+    if subsection:
+        next_sibling = subsection[1]
+        for h in next_h_tags(next_sibling):
+            subsections.append({
+                "subsection": h.get_text(),
+                "paragraphs": next_p_texts(h.find_next_sibling(['p', 'ul']))
         })
     return subsections
 
@@ -72,9 +71,10 @@ def extract_headers(parent_node):
 
     result = {}
 
+    # in case of getting the first/level-0 <p> tags
     first_node = parent_node.find(['h2', 'p'])
     if first_node and first_node.name == 'p':
-        p_tags_initial = next_p_texts(first_node, include_first=True)
+        p_tags_initial = next_p_texts(first_node)
         result.update({
             "paragraphs": p_tags_initial
         })
@@ -88,7 +88,7 @@ def extract_headers(parent_node):
         for h2 in h2_tags:
             section = {
                 "section": h2.get_text(),
-                "paragraphs": next_p_texts(h2)
+                "paragraphs": next_p_texts(h2.find_next_sibling(['p', 'ul']))
             }
 
             subsections = get_subsections(h2)
@@ -112,4 +112,4 @@ try:
         json.dump(extract_headers(parent_node), outfile, ensure_ascii=False)
 
 except IOError as e:
-    print ('Please change "example.html" with your correct file name.')
+    print ('Please change "example.html" with the correct file name.')
