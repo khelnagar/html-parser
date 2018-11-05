@@ -11,8 +11,10 @@ file_name = 'example.html'
 def get_node_text(node):
     """node can be any tag with children, and you want to get inner text out of.
     ex input: <p>text<a>text2</a>text3</p>"""
-
-    return ' '.join(node.get_text().split('\n'))
+    
+    if node.name == 'p':
+        return ' '.join(node.get_text().split('\n'))
+    return '\n'.join(node.get_text().split('\n'))   	
 
 
 def next_p_texts(node):
